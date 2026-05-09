@@ -120,7 +120,7 @@ namespace DS4Windows.InputDevices
                 uint tempDelta = 0;
                 long latencySum = 0;
 
-                sixAxis.ResetContinuousCalibration();
+                sixAxis.StopContinuousCalibration();
                 standbySw.Start();
 
                 while (!exitInputThread)

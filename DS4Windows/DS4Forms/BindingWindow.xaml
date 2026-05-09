@@ -596,13 +596,14 @@
                         <Button x:Name="absMouseDownBindBtn" Content="{lex:Loc BindingWin.AbsMouseDown}" Margin="0,8,0,0" />
                         <Button x:Name="absMouseLeftBindBtn" Content="{lex:Loc BindingWin.AbsMouseLeft}" Margin="0,8,0,0" />
                         <Button x:Name="absMouseRightBindBtn" Content="{lex:Loc BindingWin.AbsMouseRight}" Margin="0,8,0,0" />
-
-                        <Separator Margin="0,12,0,8" />
-                        <TextBlock Text="Touchpad Swipe" FontWeight="Bold" Margin="0,0,0,4" />
-                        <Button x:Name="swipeTouchUpBtn" Content="Swipe Up" Margin="0,4,0,0" />
-                        <Button x:Name="swipeTouchDownBtn" Content="Swipe Down" Margin="0,4,0,0" />
-                        <Button x:Name="swipeTouchLeftBtn" Content="Swipe Left" Margin="0,4,0,0" />
-                        <Button x:Name="swipeTouchRightBtn" Content="Swipe Right" Margin="0,4,0,0" />
+                    </StackPanel>
+                </TabItem>
+                <TabItem Header="Touchpad Swipe">
+                    <StackPanel Orientation="Vertical" Margin="8" HorizontalAlignment="Left" MinWidth="200">
+                        <Button x:Name="swipeTouchUpBtn" Content="Swipe Up" />
+                        <Button x:Name="swipeTouchDownBtn" Content="Swipe Down" Margin="0,8,0,0" />
+                        <Button x:Name="swipeTouchLeftBtn" Content="Swipe Left" Margin="0,8,0,0" />
+                        <Button x:Name="swipeTouchRightBtn" Content="Swipe Right" Margin="0,8,0,0" />
                     </StackPanel>
                 </TabItem>
             </TabControl>
