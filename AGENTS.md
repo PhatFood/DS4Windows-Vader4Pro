@@ -40,3 +40,18 @@ Uses MSTest framework (MSTest.TestAdapter + MSTest.TestFramework).
 - Allow unsafe blocks for some platform-specific code
 - Server GC enabled
 - Solution: Visual Studio 17 (2022)
+
+## Feature Notes
+
+### Touchpad Swipe Mapping
+
+Allows any controller button to be mapped to a touchpad swipe gesture (Up/Down/Left/Right) via the binding UI.
+
+**Key files:**
+- `DS4Windows/DS4Control/FakeSwipeInjector.cs` — Per-device state machine that injects fake touchpad touch data into `DS4State`
+- `DS4Windows/DS4Control/ScpUtil.cs` — `X360Controls` enum contains `SwipeTouchUp/Down/Left/Right` (placed after `Unbound`)
+- `DS4Windows/DS4Control/Mapping.cs` — Routes swipe button presses to `FakeSwipeInjector.SetSwipeState()`
+- `DS4Windows/DS4Control/ControlService.cs` — Calls `FakeSwipeInjector.ApplyToState()` after touch data copy in `On_Report`
+- `DS4Windows/DS4Forms/BindingWindow.xaml(.cs)` — Swipe buttons in the Abs Mouse tab
+
+**How it works:** Two-frame approach — Frame 1 touches center (960, 471), Frame 2+ jumps to endpoint (±400px), release lifts the finger. Games detect the swipe direction from the position delta on finger lift.

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -136,10 +136,8 @@ namespace Vader4ProReader.Device
         public short PitchRaw => BitConverter.ToInt16(rawReport.Span[26..28]);
         public short RollRaw => BitConverter.ToInt16(rawReport.Span[29..31]);
 
-        // LSM6DS* gyroscope max range: +/- 2000 dps
-
-        public float YawCalibrated => YawRaw << 6;
-        public float PitchCalibrated => PitchRaw << 6;
+        public float YawCalibrated => Math.Clamp(YawRaw << 6, -32768, 32767);
+        public float PitchCalibrated => Math.Clamp(PitchRaw << 6, -32768, 32767);
         public float RollCalibrated => RollRaw;
 
         public short AccelXRaw => BitConverter.ToInt16(rawReport.Span[11..13]);
@@ -147,9 +145,9 @@ namespace Vader4ProReader.Device
         public short AccelZRaw => BitConverter.ToInt16(rawReport.Span[13..15]);
 
 
-        public short AccelXCalibrated => (short)(AccelXRaw << 5);
-        public short AccelYCalibrated => (short)(AccelYRaw << 5);
-        public short AccelZCalibrated => (short)(AccelZRaw << 5);
+        public short AccelXCalibrated => (short)Math.Clamp(AccelXRaw << 5, -32768, 32767);
+        public short AccelYCalibrated => (short)Math.Clamp(AccelYRaw << 5, -32768, 32767);
+        public short AccelZCalibrated => (short)Math.Clamp(AccelZRaw << 5, -32768, 32767);
 
         public bool IsAirMouseActive => (rawReport.Span[3] & 128) != 0;
 

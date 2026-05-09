@@ -1,4 +1,4 @@
-﻿/*
+/*
 DS4Windows
 Copyright (C) 2023  Travis Nickles
 
@@ -426,6 +426,19 @@ namespace DS4WinWPF.DS4Forms
             associatedBindings.Add(absMouseRightBindBtn,
                 new BindAssociation() { outputType = BindAssociation.OutType.Button, control = DS4Windows.X360Controls.AbsMouseRight });
             absMouseRightBindBtn.Click += OutputButtonBtn_Click;
+
+            associatedBindings.Add(swipeTouchUpBtn,
+                new BindAssociation() { outputType = BindAssociation.OutType.Button, control = DS4Windows.X360Controls.SwipeTouchUp });
+            swipeTouchUpBtn.Click += OutputButtonBtn_Click;
+            associatedBindings.Add(swipeTouchDownBtn,
+                new BindAssociation() { outputType = BindAssociation.OutType.Button, control = DS4Windows.X360Controls.SwipeTouchDown });
+            swipeTouchDownBtn.Click += OutputButtonBtn_Click;
+            associatedBindings.Add(swipeTouchLeftBtn,
+                new BindAssociation() { outputType = BindAssociation.OutType.Button, control = DS4Windows.X360Controls.SwipeTouchLeft });
+            swipeTouchLeftBtn.Click += OutputButtonBtn_Click;
+            associatedBindings.Add(swipeTouchRightBtn,
+                new BindAssociation() { outputType = BindAssociation.OutType.Button, control = DS4Windows.X360Controls.SwipeTouchRight });
+            swipeTouchRightBtn.Click += OutputButtonBtn_Click;
         }
 
         private void InitKeyBindings()

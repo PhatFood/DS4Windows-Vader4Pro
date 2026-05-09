@@ -1,4 +1,4 @@
-﻿/*
+/*
 DS4Windows
 Copyright (C) 2023  Travis Nickles
 
@@ -2748,6 +2748,9 @@ namespace DS4Windows
                     tempMapState.TouchPacketCounter = cState.TouchPacketCounter;
                     tempMapState.TrackPadTouch0 = cState.TrackPadTouch0;
                     tempMapState.TrackPadTouch1 = cState.TrackPadTouch1;
+
+                    // Inject fake touchpad swipe if any swipe actions are mapped
+                    Mapping.fakeSwipeInjector.ApplyToState(ind, tempMapState);
 
                     if (isUsingOSCServer())
                     {

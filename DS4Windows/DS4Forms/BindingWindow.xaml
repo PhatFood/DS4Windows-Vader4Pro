@@ -1,4 +1,4 @@
-﻿<Window x:Class="DS4WinWPF.DS4Forms.BindingWindow"
+<Window x:Class="DS4WinWPF.DS4Forms.BindingWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -596,6 +596,13 @@
                         <Button x:Name="absMouseDownBindBtn" Content="{lex:Loc BindingWin.AbsMouseDown}" Margin="0,8,0,0" />
                         <Button x:Name="absMouseLeftBindBtn" Content="{lex:Loc BindingWin.AbsMouseLeft}" Margin="0,8,0,0" />
                         <Button x:Name="absMouseRightBindBtn" Content="{lex:Loc BindingWin.AbsMouseRight}" Margin="0,8,0,0" />
+
+                        <Separator Margin="0,12,0,8" />
+                        <TextBlock Text="Touchpad Swipe" FontWeight="Bold" Margin="0,0,0,4" />
+                        <Button x:Name="swipeTouchUpBtn" Content="Swipe Up" Margin="0,4,0,0" />
+                        <Button x:Name="swipeTouchDownBtn" Content="Swipe Down" Margin="0,4,0,0" />
+                        <Button x:Name="swipeTouchLeftBtn" Content="Swipe Left" Margin="0,4,0,0" />
+                        <Button x:Name="swipeTouchRightBtn" Content="Swipe Right" Margin="0,4,0,0" />
                     </StackPanel>
                 </TabItem>
             </TabControl>

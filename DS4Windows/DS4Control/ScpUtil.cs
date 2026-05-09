@@ -1,4 +1,4 @@
-﻿/*
+/*
 DS4Windows
 Copyright (C) 2023  Travis Nickles
 
@@ -53,7 +53,7 @@ namespace DS4Windows
     public enum DS4KeyType : byte { None = 0, ScanCode = 1, Toggle = 2, Unbound = 4, Macro = 8, HoldMacro = 16, RepeatMacro = 32 }; // Increment by exponents of 2*, starting at 2^0
     public enum Ds3PadId : byte { None = 0xFF, One = 0x00, Two = 0x01, Three = 0x02, Four = 0x03, All = 0x04 };
     public enum DS4Controls : byte { None, LXNeg, LXPos, LYNeg, LYPos, RXNeg, RXPos, RYNeg, RYPos, L1, L2, L3, R1, R2, R3, Square, Triangle, Circle, Cross, DpadUp, DpadRight, DpadDown, DpadLeft, PS, TouchLeft, TouchUpper, TouchMulti, TouchRight, Share, Options, Mute, FnL, FnR, BLP, BRP, GyroXPos, GyroXNeg, GyroZPos, GyroZNeg, SwipeLeft, SwipeRight, SwipeUp, SwipeDown, L2FullPull, R2FullPull, GyroSwipeLeft, GyroSwipeRight, GyroSwipeUp, GyroSwipeDown, Capture, SideL, SideR, LSOuter, RSOuter, TouchStarted, TouchEnded };
-    public enum X360Controls : byte { None, LXNeg, LXPos, LYNeg, LYPos, RXNeg, RXPos, RYNeg, RYPos, LB, LT, LS, RB, RT, RS, X, Y, B, A, DpadUp, DpadRight, DpadDown, DpadLeft, Guide, Back, Start, TouchpadClick, LeftMouse, RightMouse, MiddleMouse, FourthMouse, FifthMouse, WUP, WDOWN, MouseUp, MouseDown, MouseLeft, MouseRight, AbsMouseUp, AbsMouseDown, AbsMouseLeft, AbsMouseRight, Unbound };
+    public enum X360Controls : byte { None, LXNeg, LXPos, LYNeg, LYPos, RXNeg, RXPos, RYNeg, RYPos, LB, LT, LS, RB, RT, RS, X, Y, B, A, DpadUp, DpadRight, DpadDown, DpadLeft, Guide, Back, Start, TouchpadClick, LeftMouse, RightMouse, MiddleMouse, FourthMouse, FifthMouse, WUP, WDOWN, MouseUp, MouseDown, MouseLeft, MouseRight, AbsMouseUp, AbsMouseDown, AbsMouseLeft, AbsMouseRight, Unbound, SwipeTouchUp, SwipeTouchDown, SwipeTouchLeft, SwipeTouchRight };
 
     public enum SASteeringWheelEmulationAxisType : byte { None = 0, LX, LY, RX, RY, L2R2, VJoy1X, VJoy1Y, VJoy1Z, VJoy2X, VJoy2Y, VJoy2Z };
     public enum OutContType : uint { None = 0, X360, DS4 }
@@ -767,6 +767,10 @@ namespace DS4Windows
             [X360Controls.AbsMouseLeft] = "Abs Mouse Left",
             [X360Controls.AbsMouseRight] = "Abs Mouse Right",
             [X360Controls.Unbound] = "Unbound",
+            [X360Controls.SwipeTouchUp] = "Touchpad Swipe Up",
+            [X360Controls.SwipeTouchDown] = "Touchpad Swipe Down",
+            [X360Controls.SwipeTouchLeft] = "Touchpad Swipe Left",
+            [X360Controls.SwipeTouchRight] = "Touchpad Swipe Right",
             [X360Controls.None] = "Unassigned",
         };
 
@@ -814,6 +818,10 @@ namespace DS4Windows
             [X360Controls.AbsMouseLeft] = "Abs Mouse Left",
             [X360Controls.AbsMouseRight] = "Abs Mouse Right",
             [X360Controls.Unbound] = "Unbound",
+            [X360Controls.SwipeTouchUp] = "Touchpad Swipe Up",
+            [X360Controls.SwipeTouchDown] = "Touchpad Swipe Down",
+            [X360Controls.SwipeTouchLeft] = "Touchpad Swipe Left",
+            [X360Controls.SwipeTouchRight] = "Touchpad Swipe Right",
         };
 
         public static string getX360ControlString(X360Controls key, OutContType conType)
@@ -5174,6 +5182,10 @@ namespace DS4Windows
                 case "Abs Mouse Left": return X360Controls.AbsMouseLeft;
                 case "Abs Mouse Right": return X360Controls.AbsMouseRight;
                 case "Unbound": return X360Controls.Unbound;
+                case "Touchpad Swipe Up": return X360Controls.SwipeTouchUp;
+                case "Touchpad Swipe Down": return X360Controls.SwipeTouchDown;
+                case "Touchpad Swipe Left": return X360Controls.SwipeTouchLeft;
+                case "Touchpad Swipe Right": return X360Controls.SwipeTouchRight;
             }
 
             return X360Controls.Unbound;
@@ -5229,6 +5241,10 @@ namespace DS4Windows
                 case X360Controls.AbsMouseLeft: return "Abs Mouse Left";
                 case X360Controls.AbsMouseRight: return "Abs Mouse Right";
                 case X360Controls.Unbound: return "Unbound";
+                case X360Controls.SwipeTouchUp: return "Touchpad Swipe Up";
+                case X360Controls.SwipeTouchDown: return "Touchpad Swipe Down";
+                case X360Controls.SwipeTouchLeft: return "Touchpad Swipe Left";
+                case X360Controls.SwipeTouchRight: return "Touchpad Swipe Right";
             }
 
             return "Unbound";

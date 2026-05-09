@@ -1,4 +1,4 @@
-﻿/*
+/*
 DS4Windows
 Copyright (C) 2023  Travis Nickles
 
@@ -105,6 +105,8 @@ namespace DS4Windows
             new Queue<ControlToXInput>(), new Queue<ControlToXInput>(),
             new Queue<ControlToXInput>(), new Queue<ControlToXInput>(),
         };
+
+        public static FakeSwipeInjector fakeSwipeInjector = new FakeSwipeInjector();
 
         struct DS4Vector2
         {
@@ -3868,6 +3870,11 @@ namespace DS4Windows
 
                             default: break;
                         }
+                    }
+                    else if (xboxControl >= X360Controls.SwipeTouchUp && xboxControl <= X360Controls.SwipeTouchRight)
+                    {
+                        bool pressed = GetBoolMapping(device, dcs.control, cState, eState, tp, fieldMapping);
+                        fakeSwipeInjector.SetSwipeState(device, xboxControl, pressed);
                     }
 
                     if (keyType.HasFlag(DS4KeyType.Toggle))
