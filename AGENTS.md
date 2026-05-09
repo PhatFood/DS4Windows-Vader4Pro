@@ -54,4 +54,9 @@ Allows any controller button to be mapped to a touchpad swipe gesture (Up/Down/L
 - `DS4Windows/DS4Control/ControlService.cs` — Calls `FakeSwipeInjector.ApplyToState()` after touch data copy in `On_Report`
 - `DS4Windows/DS4Forms/BindingWindow.xaml(.cs)` — Swipe buttons in the Abs Mouse tab
 
-**How it works:** Two-frame approach — Frame 1 touches center (960, 471), Frame 2+ jumps to endpoint (±400px), release lifts the finger. Games detect the swipe direction from the position delta on finger lift.
+**How it works:** Three-phase approach:
+1. Center hold (3 frames) — finger at center (960, 471) to establish contact
+2. Move (24 frames) — finger drifts toward endpoint (±400px) at ~17 units/frame
+3. Release — finger lifts past endpoint (+40px) so the game sees clear velocity vector
+
+Total ~27 active frames (~68ms at 400Hz). The finger never parks stationary — it keeps drifting past the endpoint (clamped to touchpad edges) so velocity is always present at lift, even after a long button hold. Presses arriving during an active swipe are dropped (no queue, no conflicts).
