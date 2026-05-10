@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -12,11 +12,10 @@ namespace DS4Windows.InputDevices
 {
     internal class Vader4ProDevice : DS4Device
     {
-        private bool timeStampInit = false;
-        private uint timeStampPrevious = 0;
-        private uint deltaTimeCurrent = 0;
         private bool outputDirty = false;
         private DS4HapticState previousHapticState = new DS4HapticState();
+        private readonly byte[] reportBuf = new byte[32]; // Pre-allocated to avoid per-frame heap allocation
+        private long syntheticTimestampTicks = 0; // Monotonic synthetic timestamp for DS4 passthru
 
         private Vader4ProControllerOptions nativeOptionsStore;
         public Vader4ProControllerOptions NativeOptionsStore { get => nativeOptionsStore; }
@@ -102,7 +101,7 @@ namespace DS4Windows.InputDevices
             {
                 Debouncer = SetupDebouncer();
                 firstActive = DateTime.UtcNow;
-                NativeMethods.HidD_SetNumInputBuffers(hDevice.SafeReadHandle.DangerousGetHandle(), 3);
+                NativeMethods.HidD_SetNumInputBuffers(hDevice.SafeReadHandle.DangerousGetHandle(), 2);
                 Queue<long> latencyQueue = new Queue<long>(21); // Set capacity at max + 1 to avoid any resizing
                 int tempLatencyCount = 0;
                 long oldtime = 0;
@@ -115,12 +114,12 @@ namespace DS4Windows.InputDevices
                 bool syncWriteReport = conType != ConnectionType.BT;
 
                 bool tempCharging = charging;
-                uint tempStamp = 0;
                 double elapsedDeltaTime = 0.0;
-                uint tempDelta = 0;
                 long latencySum = 0;
 
-                sixAxis.StopContinuousCalibration();
+                // Let DS4Windows' own continuous calibration run (started in DS4SixAxis constructor).
+                // The Vader 4 Pro firmware has unreliable built-in auto-calibration that can cause
+                // drift and offset issues. DS4Windows' calibration provides a secondary correction.
                 standbySw.Start();
 
                 while (!exitInputThread)
@@ -168,12 +167,11 @@ namespace DS4Windows.InputDevices
 
                     cState.PacketCounter = pState.PacketCounter + 1;
                     cState.ReportTimeStamp = utcNow;
-                    byte[] buf = new byte[32];
                     int copyLen = Math.Min(inputReport.Length, 32); // safe length
-                    Array.Copy(inputReport, buf, copyLen);         // copies only what exists
-                    if (buf[1] == 0xFE)
+                    Array.Copy(inputReport, reportBuf, copyLen);   // reuse pre-allocated buffer
+                    if (reportBuf[1] == 0xFE)
                     {
-                        var report = new Vader4ProReport(buf);
+                        var report = new Vader4ProReport(reportBuf);
                         // Dpad
                         cState.DpadUp = report.IsDPadUpPressed;
                         cState.DpadRight = report.IsDPadRightPressed;
@@ -234,39 +232,17 @@ namespace DS4Windows.InputDevices
                     cState.Battery = 99;
 
 
-                    if (timeStampInit == false)
-                    {
-                        timeStampInit = true;
-                        deltaTimeCurrent = tempStamp * 1u / 3u;
-                    }
-                    else if (timeStampPrevious > tempStamp)
-                    {
-                        tempDelta = uint.MaxValue - timeStampPrevious + tempStamp + 1u;
-                        deltaTimeCurrent = tempDelta * 1u / 3u;
-                    }
-                    else
-                    {
-                        tempDelta = tempStamp - timeStampPrevious;
-                        deltaTimeCurrent = tempDelta * 1u / 3u;
-                    }
-
-
-                    // Make sure timestamps don't match
-                    if (deltaTimeCurrent != 0)
-                    {
-                        elapsedDeltaTime = 0.000001 * deltaTimeCurrent; // Convert from microseconds to seconds
-                        cState.totalMicroSec = pState.totalMicroSec + deltaTimeCurrent;
-                    }
-                    else
-                    {
-                        // Duplicate timestamp. Use system clock for elapsed time instead
-                        elapsedDeltaTime = lastTimeElapsedDouble * .001;
-                        cState.totalMicroSec = pState.totalMicroSec + (uint)(elapsedDeltaTime * 1000000);
-                    }
-
+                    // Vader 4 Pro has no hardware timestamp in its HID report.
+                    // Generate a synthetic monotonic timestamp from the system high-res timer
+                    // so DS4 Passthru games see a properly advancing timestamp field.
+                    elapsedDeltaTime = lastTimeElapsedDouble * .001; // ms → seconds
+                    uint elapsedMicro = (uint)(lastTimeElapsedDouble * 1000.0); // ms → microseconds
+                    cState.totalMicroSec = pState.totalMicroSec + elapsedMicro;
                     cState.elapsedTime = elapsedDeltaTime;
-                    cState.ds4Timestamp = (ushort)((tempStamp / 16) % ushort.MaxValue);
-                    timeStampPrevious = tempStamp;
+
+                    // Advance synthetic timestamp (~5.33 µs per tick, matching DS4 convention)
+                    syntheticTimestampTicks += elapsedMicro * 3; // microseconds * 3 to match DS4's 1/3µs tick rate
+                    cState.ds4Timestamp = (ushort)((syntheticTimestampTicks / 16) % ushort.MaxValue);
 
 
                     if (idleTimeout == 0)

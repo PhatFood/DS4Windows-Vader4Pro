@@ -132,35 +132,30 @@ namespace Vader4ProReader.Device
         public byte LT => rawReport.Span[23];
         public byte RT => rawReport.Span[24];
 
-        public short YawRaw => BitConverter.ToInt16([rawReport.Span[18], rawReport.Span[20]]);
-        public short PitchRaw => BitConverter.ToInt16(rawReport.Span[26..28]);
-        public short RollRaw => BitConverter.ToInt16(rawReport.Span[29..31]);
+        public short YawRaw => (short)(rawReport.Span[18] | (rawReport.Span[20] << 8));
+        public short PitchRaw => (short)(rawReport.Span[26] | (rawReport.Span[27] << 8));
+        public short RollRaw => (short)(rawReport.Span[29] | (rawReport.Span[30] << 8));
 
-        public float YawCalibrated => Math.Clamp(YawRaw << 6, -32768, 32767);
-        public float PitchCalibrated => Math.Clamp(PitchRaw << 6, -32768, 32767);
-        public float RollCalibrated => RollRaw;
+        // LSM6DS IMU: ±2000 dps range. DS4 gyro resolution: 16 units per degree/sec.
+        // Yaw/Pitch raw range: [-512, 512]. Conversion: Raw * (2000 * 16 / 512) = Raw * 62.5
+        // Roll raw range: [-32768, 32767] (full int16). Conversion: Raw * (2000 * 16 / 32768) ≈ Raw * 0.977 ≈ passthrough
+        private const float GYRO_YAW_PITCH_SCALE = 2000f * 16f / 512f;  // = 62.5
+        private const float GYRO_ROLL_SCALE = 2000f * 16f / 32768f;     // ≈ 0.9766
 
-        public short AccelXRaw => BitConverter.ToInt16(rawReport.Span[11..13]);
-        public short AccelYRaw => BitConverter.ToInt16(rawReport.Span[15..17]);
-        public short AccelZRaw => BitConverter.ToInt16(rawReport.Span[13..15]);
+        public float YawCalibrated => YawRaw * GYRO_YAW_PITCH_SCALE;
+        public float PitchCalibrated => PitchRaw * GYRO_YAW_PITCH_SCALE;
+        public float RollCalibrated => RollRaw * GYRO_ROLL_SCALE;
 
+        public short AccelXRaw => (short)(rawReport.Span[11] | (rawReport.Span[12] << 8));
+        public short AccelYRaw => (short)(rawReport.Span[15] | (rawReport.Span[16] << 8));
+        public short AccelZRaw => (short)(rawReport.Span[13] | (rawReport.Span[14] << 8));
 
+        // Firmware auto-calibrates accel to (0, 256, 0) at idle. DS4 expects ACC_RES_PER_G = 8192.
+        // Scale: 8192 / 256 = 32 = << 5. Z axis has ~32 unit firmware offset (per dantmnf's analysis).
         public short AccelXCalibrated => (short)Math.Clamp(AccelXRaw << 5, -32768, 32767);
         public short AccelYCalibrated => (short)Math.Clamp(AccelYRaw << 5, -32768, 32767);
-        public short AccelZCalibrated => (short)Math.Clamp(AccelZRaw << 5, -32768, 32767);
+        public short AccelZCalibrated => (short)Math.Clamp((AccelZRaw + 32) << 5, -32768, 32767);
 
         public bool IsAirMouseActive => (rawReport.Span[3] & 128) != 0;
-
-
-
-
-        // X/Y/Z axis automatically calibrated to 0/256/0 when the device is steady
-        // statistical analysis shows that Z axis is offset by approx. 32, assume (256*scale)^2 + (32*scale)^2 = g^2
-        // this may vary between devices and firmware versions
-        // alternatively, do optimization with (ScaleX*(X+OffsetX))^2 + (ScaleY*(Y+OffsetY))^2 + (ScaleZ*(Z+OffsetZ))^2 = g^2
-        // with steady readings in different orientations
-
-        // scale = 9.80665 / sqrt(256^2 + 32^2)
-        //const float accelScale = 0.03801141343622691f;
     }
 }
