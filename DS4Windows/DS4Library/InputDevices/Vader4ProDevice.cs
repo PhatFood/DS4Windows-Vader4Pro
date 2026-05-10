@@ -117,9 +117,11 @@ namespace DS4Windows.InputDevices
                 double elapsedDeltaTime = 0.0;
                 long latencySum = 0;
 
-                // Let DS4Windows' own continuous calibration run (started in DS4SixAxis constructor).
-                // The Vader 4 Pro firmware has unreliable built-in auto-calibration that can cause
-                // drift and offset issues. DS4Windows' calibration provides a secondary correction.
+                // Stop DS4Windows' own continuous calibration. The Vader 4 Pro firmware
+                // handles gyro calibration internally. DS4Windows' calibration requires keeping
+                // the controller perfectly still for 5 seconds — if the user moves during that
+                // window, wrong offsets get computed that reduce effective gyro range.
+                sixAxis.StopContinuousCalibration();
                 standbySw.Start();
 
                 while (!exitInputThread)
