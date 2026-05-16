@@ -17,6 +17,15 @@ namespace DS4Windows.InputDevices
         private readonly byte[] reportBuf = new byte[32]; // Pre-allocated to avoid per-frame heap allocation
         private long syntheticTimestampTicks = 0; // Monotonic synthetic timestamp for DS4 passthru
 
+        // Gyro velocity-adaptive smoothing.
+        // Vader 4 Pro gyro updates at ~100Hz; HID reports at 500-1000Hz.
+        // Smoothing only applies when the raw value actually changes between reports.
+        private short prevYawRaw, prevPitchRaw, prevRollRaw;
+        private float gyroYawSmoothed, gyroPitchSmoothed, gyroRollSmoothed;
+        private bool gyroFirstFrame;
+        private const float GYRO_SMOOTHING_ALPHA = 0.50f;
+        private const float GYRO_FAST_THRESHOLD = 150f; // DS4 units (~9.4 deg/s)
+
         private Vader4ProControllerOptions nativeOptionsStore;
         public Vader4ProControllerOptions NativeOptionsStore { get => nativeOptionsStore; }
         public Vader4ProDevice(HidDevice hidDevice, string disName, VidPidFeatureSet featureSet = VidPidFeatureSet.DefaultDS4, string macAddress = "") :
@@ -123,6 +132,7 @@ namespace DS4Windows.InputDevices
                 // window, wrong offsets get computed that reduce effective gyro range.
                 sixAxis.StopContinuousCalibration();
                 standbySw.Start();
+                gyroFirstFrame = true; // reset on thread restart
 
                 while (!exitInputThread)
                 {
@@ -218,10 +228,62 @@ namespace DS4Windows.InputDevices
                         cState.FnR = report.IsZPressed;
                         // FN button
                         cState.Capture = report.IsFNPressed;
-                        // Gyro / Accelerometer
-                        short yaw = (short)-report.YawCalibrated;
-                        short pitch = (short)-report.PitchCalibrated;
-                        short roll = (short)(report.RollCalibrated);
+                        // Gyro / Accelerometer — velocity-adaptive smoothing.
+                        // Smooths slow movements (reducing quantization stepping) while
+                        // passing fast movements through raw. Only applies when raw value
+                        // actually changes (gyro updates at ~100Hz, HID at 500-1000Hz).
+                        float yawCal = report.YawCalibrated;
+                        float pitchCal = report.PitchCalibrated;
+                        float rollCal = report.RollCalibrated;
+
+                        if (gyroFirstFrame)
+                        {
+                            gyroYawSmoothed = yawCal;
+                            gyroPitchSmoothed = pitchCal;
+                            gyroRollSmoothed = rollCal;
+                            gyroFirstFrame = false;
+                        }
+                        else
+                        {
+                            // Yaw (coarse +/-512 range - smoothing helps)
+                            if (report.YawRaw != prevYawRaw)
+                            {
+                                float delta = yawCal - gyroYawSmoothed;
+                                float alpha;
+                                if (report.YawRaw == 0)
+                                    alpha = 1f; // snap to zero — eliminate EMA decay tail
+                                else
+                                {
+                                    float t = Math.Clamp(Math.Abs(delta) / GYRO_FAST_THRESHOLD, 0f, 1f);
+                                    alpha = GYRO_SMOOTHING_ALPHA + t * (1f - GYRO_SMOOTHING_ALPHA);
+                                }
+                                gyroYawSmoothed += alpha * delta;
+                            }
+                            // Pitch (coarse +/-512 range - smoothing helps)
+                            if (report.PitchRaw != prevPitchRaw)
+                            {
+                                float delta = pitchCal - gyroPitchSmoothed;
+                                float alpha;
+                                if (report.PitchRaw == 0)
+                                    alpha = 1f; // snap to zero — eliminate EMA decay tail
+                                else
+                                {
+                                    float t = Math.Clamp(Math.Abs(delta) / GYRO_FAST_THRESHOLD, 0f, 1f);
+                                    alpha = GYRO_SMOOTHING_ALPHA + t * (1f - GYRO_SMOOTHING_ALPHA);
+                                }
+                                gyroPitchSmoothed += alpha * delta;
+                            }
+                            // Roll (full int16 range - no quantization issue, passthrough)
+                            if (report.RollRaw != prevRollRaw)
+                                gyroRollSmoothed = rollCal;
+                        }
+                        prevYawRaw = report.YawRaw;
+                        prevPitchRaw = report.PitchRaw;
+                        prevRollRaw = report.RollRaw;
+
+                        short yaw = (short)-gyroYawSmoothed;
+                        short pitch = (short)-gyroPitchSmoothed;
+                        short roll = (short)gyroRollSmoothed;
                         short ax = (short)-(report.AccelXCalibrated);
                         short ay = (short)(report.AccelYCalibrated);
                         short az = (short)(report.AccelZCalibrated);
